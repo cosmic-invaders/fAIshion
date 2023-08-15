@@ -7,6 +7,6 @@ nlp = spacy.load("en_core_web_sm")
 
 # Load the sentiment analysis pipeline
 sentiment_analysis_pipeline = pipeline("sentiment-analysis")
-zero_shot_pipeline.save_pretrained("K:/grid/Backend/backend/cache/zero-shot")
-sentiment_analysis_pipeline.save_pretrained("K:/grid/Backend/backend/cache/sentiment")
+zero_shot_pipeline.save_pretrained("cache/zero-shot")
+sentiment_analysis_pipeline.save_pretrained("cache/sentiment")
 
