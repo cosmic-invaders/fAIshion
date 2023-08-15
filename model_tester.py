@@ -3,6 +3,9 @@
 
 import spacy
 from transformers import pipeline
+import nltk
+from nltk.corpus import stopwords
+nltk.download('stopwords')
 cache = "/cache"
 # Load the zero-shot classification pipeline
 zero_shot_pipeline = pipeline("zero-shot-classification", model="D:/projects/GRID/fAIshion/cache/zero-shot")
