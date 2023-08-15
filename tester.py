@@ -5,13 +5,11 @@ import spacy
 from transformers import pipeline
 cache = "/cache"
 # Load the zero-shot classification pipeline
-zero_shot_pipeline = pipeline(
-    "zero-shot-classification", model="K:/grid/Backend/backend/cache/zero-shot")
+zero_shot_pipeline = pipeline("zero-shot-classification", model="D:/projects/GRID/fAIshion/cache/zero-shot")
 nlp = spacy.load("en_core_web_sm")
 
 # Load the sentiment analysis pipeline
-sentiment_analysis_pipeline = pipeline(
-    "sentiment-analysis", model="K:/grid/Backend/backend/cache/sentiment")
+sentiment_analysis_pipeline = pipeline("sentiment-analysis", model="D:/projects/GRID/fAIshion/cache/sentiment")
 
 # Analyze sentiment of a review
 
