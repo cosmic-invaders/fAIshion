@@ -1,89 +1,72 @@
-
-# Define candidate labels for review or query
-
-import spacy
 from transformers import pipeline
-cache = "/cache"
+import spacy
+import nltk
+from nltk.corpus import stopwords
+# nltk.download('stopwords')
+import json
+
 # Load the zero-shot classification pipeline
-zero_shot_pipeline = pipeline(
-    "zero-shot-classification", model="K:/grid/Backend/backend/cache/zero-shot")
+# zero_shot_pipeline = pipeline("zero-shot-classification")
 nlp = spacy.load("en_core_web_sm")
 
-# Load the sentiment analysis pipeline
-sentiment_analysis_pipeline = pipeline(
-    "sentiment-analysis", model="K:/grid/Backend/backend/cache/sentiment")
+# Convert input text to lowercase and tokenize
+input_text = input("user: ")
+input_text = input_text.lower()
+doc = nlp(input_text)
 
-# Analyze sentiment of a review
-
-
-def analyze_sentiment(review_text):
-    sentiment_result = sentiment_analysis_pipeline(review_text)[0]
-    label = sentiment_result['label']
-    return label
-
+# Extract objects (direct objects) and events (occasions) from the sentence
+keywords = []
+dblabels = []
+for chunk in doc.noun_chunks:
+    keywords.append(chunk.text)
 
 
-input_labels = ["review", "query"]
 
-# Define candidate labels for product categories
-# category_labels = ["upperwear", "bottomwear",
-#                    "accessories", "wearables", "outfit", "FootWear"]
+# Convert each term into single word terms
+single_word_array = []
+for term in keywords:
+    single_words = term.split()
+    single_word_array.extend(single_words)
+print(single_word_array)
 
-# Load the English language model for spaCy
+## read json rules obj
+json_file_path = "class_mapping_list.json"
+with open(json_file_path, "r") as json_file:
+    class_mappings = json.load(json_file)
+list_of_lists = class_mappings
 
-input_text = input("user :  ")
+class_mapping_list = [tuple(lst) for lst in list_of_lists]
 
-# Perform zero-shot classification for review or query
-result = zero_shot_pipeline(input_text, input_labels)
+# print(class_mapping_list)
+    
+# print(type(class_mapping_list))
 
-# Get the label with the highest score
-predicted_label = result['labels'][0]
+mappings_for_word = []
+output = []
+# Iterate through each word in the normalized array
+for word in single_word_array:
+    mappings_for_word = [mapping[1] for mapping in class_mapping_list if word == mapping[0]]
+    # print(mappings_for_word)
+    if not mappings_for_word:
+      mappings_for_word.append(word)
+    for i in mappings_for_word:
+      output.append(i)
+    mappings_for_word.clear()
+    
+ ## merging inner lists of output kyoki wo sab innerlist mappings hai for each word
+ 
+merged_list = []
+for item in output:
+    if isinstance(item, list):
+        merged_list.extend(item)
+    else:
+        merged_list.append(item)
 
-if predicted_label == input_labels[0]:  # Review
-    sentiment = analyze_sentiment(input_text)
-    print("its a review!!")
-    print("Sentiment:", sentiment)
-    doc = nlp(input_text)
-    objects = [token.text for token in doc if token.pos_ == "NOUN"]
+print(merged_list)
 
-    ## This method is no more being used because team decided that inference is better than classification
-    # Perform zero-shot classification for product categories
-    # for obj in objects:
-    #     category_result = zero_shot_pipeline(obj, category_labels)
-    #     category_label = category_result['labels'][0]
-    #     confidence_score = category_result['scores'][0]
+##filtering i tum hum mai etc
 
-    #     print(f"Object: {obj}")
-    #     print("Classified as:", category_label)
-    #     print("Confidence Score:", confidence_score)
-
-else:  # Query
-    print("Classified as:", predicted_label)
-    # Process the input text with spaCy
-    doc = nlp(input_text)
-
-    # Extract objects (direct objects) and events (occasions) from the sentence
-    objects = []
-    events = []
-    keywords = []
-    for chunk in doc.noun_chunks:
-        keywords.append(chunk.text)
-
-    for token in doc:
-        if "obj" in token.dep_ and token.head.pos_ == "VERB":
-            objects.append(token.text)
-        elif "nsubj" in token.dep_ and token.head.pos_ == "VERB":
-            events.append(token.text)
-
-    # for obj in objects:
-    #     category_result = zero_shot_pipeline(obj, category_labels)
-    #     category_label = category_result['labels'][0]
-    #     confidence_score = category_result['scores'][0]
-
-    #     print(f"Object: {obj}")
-    #     print("Classified as:", category_label)
-    #     print("Confidence Score:", confidence_score)
-
-    print(keywords)
-    for obj in objects:
-        print(f"Object: {obj}")
+stop_words = set(stopwords.words('english'))
+filtered_words = [word for word in merged_list if word.lower()
+                  not in stop_words]
+print(filtered_words)

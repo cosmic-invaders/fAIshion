@@ -5,3 +5,4 @@ create cache folder
 and run model loader.py in order to save the downloaded models locally
 test the system using tester.py
 every time to add new rule need add in rules.py and run it as it regenerates json
+`
