@@ -8,6 +8,9 @@ from sklearn.neighbors import NearestNeighbors
 from nltk.corpus import stopwords
 import csv
 import webbrowser
+from flask import Flask, request, jsonify
+from flask_socketio import SocketIO, emit
+from flask_cors import CORS
 
 nltk.download('stopwords')
 cache = "/cache"
@@ -131,32 +134,82 @@ def output(tags, num_recommendations=5):
 
     return recommended_outfits
     
+
+app = Flask(__name__)
+cors = CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:3000"}})
+
+socketio = SocketIO(app,cors_allowed_origins="*")
+@app.route('/')
+def index():
+    return "Server is running."
+
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
     
+@socketio.on('message')
+def handler(data):
+    print(data)
+    user = data['user_input']
+    QorRev = statement_analyzer(user)
+    senti = sentiment_analyzer(user)
+    targets = target(user)
+    dbtags = dbTags(user)
+    recommended_outfits = output(dbtags)
+    links = []
+    ids = []
+
+    for index, row in recommended_outfits.iterrows():
+        ids.append(str(row['id']) + '.jpg')
+
+    for id in ids:
+        links.append(linker(id))
+
+    response = {
+        'QorRev': QorRev,
+        'senti': senti,
+        'targets': targets,
+        'dbtags': dbtags,
+        'recommended_outfits': recommended_outfits[['gender', 'masterCategory', 'subCategory',
+                                                    'articleType', 'baseColour', 'season', 'year', 'usage', 'productDisplayName']].to_dict(orient='records'),
+        'links': links
+    }
+    print(response)
+
+    emit('bot', response)
+    
+
+
 if __name__ == "__main__":
-    while(True):
-        user= input("user: ")
-        QorRev = statement_analyzer(user)
-        print(QorRev)
-        senti= sentiment_analyzer(user)
-        print(senti)
-        targets=target(user)
-        print(targets)
-        dbtags= dbTags(user)
-        print(dbtags)
-        recommended_outfits=output(dbtags)
-        print(recommended_outfits[['gender', 'masterCategory', 'subCategory',
-              'articleType', 'baseColour', 'season', 'year', 'usage', 'productDisplayName']])
+    socketio.run(app, host='0.0.0.0', port=3000, debug=True)
+
+
+
+
+
+# if __name__ == "__main__":
+#     while(True):
+#         user= input("user: ")
+#         QorRev = statement_analyzer(user)
+#         print(QorRev)
+#         senti= sentiment_analyzer(user)
+#         print(senti)
+#         targets=target(user)
+#         print(targets)
+#         dbtags= dbTags(user)
+#         print(dbtags)
+#         recommended_outfits=output(dbtags)
+#         print(recommended_outfits[['gender', 'masterCategory', 'subCategory',
+#               'articleType', 'baseColour', 'season', 'year', 'usage', 'productDisplayName']])
         
-        links = []
-        ids =[]
-        # Iterate through recommended outfits and display images
-        for index, row in recommended_outfits.iterrows():
-            ids.append(str(row['id']) + '.jpg')
-            print(ids)  
-        for id in ids:
-            links.append(linker(id)) 
-        print(links)
-        for link in links:
-            webbrowser.open(link)
+#         links = []
+#         ids =[]
+#         # Iterate through recommended outfits and display images
+#         for index, row in recommended_outfits.iterrows():
+#             ids.append(str(row['id']) + '.jpg')
+#             print(ids)  
+#         for id in ids:
+#             links.append(linker(id)) 
+#         print(links)
         
 

@@ -35,7 +35,7 @@ class_mapping_list = [
     ('top', ['Topwear']),
     ('blouse', ['Topwear']),
     ('jeans', ['Bottomwear']),
-    ('pant', ['Bottomwear']),
+    ('pant', ['Bottomwear','Jeans','Pants']),
     ('trousers', ['Bottomwear']),
     ('watch', ['Watches']),
     ('timepiece', ['Watches']),
@@ -236,6 +236,7 @@ class_mapping_list = [
     ('cap', ['Caps']),
     ('trouser', ['Trousers']),
     ('pants', ['Trousers']),
+    
     ('earrings', ['Earrings']),
     ('camisole', ['Camisoles']),
     ('boxer', ['Boxers']),
