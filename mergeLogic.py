@@ -11,6 +11,9 @@ import webbrowser
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
+from bs4 import BeautifulSoup
+from urllib.request import urlopen
+import re
 
 nltk.download('stopwords')
 cache = "/cache"
@@ -136,7 +139,7 @@ def output(tags, num_recommendations=5):
     
 
 app = Flask(__name__)
-cors = CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:3000"}})
+cors = CORS(app)
 
 socketio = SocketIO(app,cors_allowed_origins="*")
 @app.route('/')
@@ -152,6 +155,10 @@ def handler(data):
     print(data)
     user = data['user_input']
     QorRev = statement_analyzer(user)
+    if(QorRev=='query'):
+        message='Here are some good ones !'
+    else:
+        message='ok i will keep that in mind'
     senti = sentiment_analyzer(user)
     targets = target(user)
     dbtags = dbTags(user)
@@ -166,6 +173,7 @@ def handler(data):
         links.append(linker(id))
 
     response = {
+        'Message':message,
         'QorRev': QorRev,
         'senti': senti,
         'targets': targets,
@@ -178,6 +186,20 @@ def handler(data):
 
     emit('bot', response)
     
+
+
+@app.route('/trends', methods=['GET'])
+def get_trends():
+    html_page = urlopen("https://www.flipkart.com/clothing-and-accessories/fashion-trends~brand/pr?sid=clo")
+    soup = BeautifulSoup(html_page, 'html.parser')
+    images = []
+    
+    for img in soup.findAll('img'):
+        img_src = img.get('src')
+        if img_src and img_src.startswith('https://') and img_src.endswith('.jpeg?q=90'):
+            images.append(img_src)
+    
+    return jsonify(images)
 
 
 if __name__ == "__main__":
@@ -211,5 +233,7 @@ if __name__ == "__main__":
 #         for id in ids:
 #             links.append(linker(id)) 
 #         print(links)
+#         for link in links:
+#             webbrowser.open(link)
         
 
